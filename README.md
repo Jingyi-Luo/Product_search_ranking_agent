@@ -47,7 +47,7 @@ product-ranking-agent
 
 Connect your MCP client to `http://127.0.0.1:8000/mcp`, then begin a new chat so it loads the current tools.
 
-## Install the Codex skill
+## Skill Installation
 
 Install the bundled Product Search Results skill into the current project:
 
