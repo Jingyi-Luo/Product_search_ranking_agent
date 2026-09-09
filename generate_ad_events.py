@@ -1,0 +1,37 @@
+"""Generate data/ad_events.csv for the product ranking sample."""
+
+import csv
+from pathlib import Path
+
+
+OUTPUT_PATH = Path(__file__).resolve().parent / "data" / "ad_events.csv"
+HEADER = ["event_date", "query_id", "query", "product_id", "ad_position", "impressions", "clicks", "add_to_carts", "purchases", "revenue_usd"]
+ROWS = [
+    ["2026-07-01", "Q001", "cordless drill", "P001", 1, 1200, 132, 38, 18, "1782.00"], ["2026-07-01", "Q001", "cordless drill", "P002", 2, 1050, 103, 31, 14, "1806.00"], ["2026-07-01", "Q001", "cordless drill", "P004", 3, 880, 81, 19, 8, "392.00"], ["2026-07-01", "Q001", "cordless drill", "P003", 4, 760, 39, 9, 3, "327.00"], ["2026-07-01", "Q001", "cordless drill", "P007", 5, 640, 18, 2, 0, "0.00"],
+    ["2026-07-02", "Q002", "dewalt cordless drill", "P001", 1, 940, 121, 40, 21, "2079.00"], ["2026-07-02", "Q002", "dewalt cordless drill", "P020", 2, 710, 79, 27, 13, "2327.00"], ["2026-07-02", "Q002", "dewalt cordless drill", "P002", 3, 680, 44, 9, 3, "387.00"], ["2026-07-02", "Q002", "dewalt cordless drill", "P005", 4, 530, 14, 1, 0, "0.00"],
+    ["2026-07-03", "Q003", "cheap drill", "P004", 1, 1100, 96, 24, 11, "539.00"], ["2026-07-03", "Q003", "cheap drill", "P005", 2, 970, 74, 20, 10, "390.00"], ["2026-07-03", "Q003", "cheap drill", "P006", 3, 720, 58, 14, 7, "553.00"], ["2026-07-03", "Q003", "cheap drill", "P009", 4, 620, 10, 0, 0, "0.00"],
+    ["2026-07-04", "Q004", "drill bits", "P007", 1, 980, 126, 48, 32, "576.00"], ["2026-07-04", "Q004", "drill bits", "P001", 2, 560, 31, 4, 1, "99.00"], ["2026-07-04", "Q004", "drill bits", "P013", 3, 470, 9, 1, 0, "0.00"],
+    ["2026-07-05", "Q005", "impact driver", "P003", 1, 1030, 139, 45, 25, "2725.00"], ["2026-07-05", "Q005", "impact driver", "P020", 2, 770, 91, 29, 16, "2864.00"], ["2026-07-05", "Q005", "impact driver", "P001", 3, 680, 43, 10, 4, "396.00"],
+    ["2026-07-06", "Q006", "corded drill", "P005", 1, 890, 112, 34, 20, "780.00"], ["2026-07-06", "Q006", "corded drill", "P001", 2, 610, 20, 2, 1, "99.00"], ["2026-07-06", "Q006", "corded drill", "P008", 3, 530, 13, 1, 0, "0.00"],
+    ["2026-07-07", "Q007", "garden hose", "P009", 1, 1260, 148, 51, 33, "2442.00"], ["2026-07-07", "Q007", "garden hose", "P010", 2, 1080, 127, 42, 28, "1064.00"], ["2026-07-07", "Q007", "garden hose", "P011", 3, 690, 17, 2, 0, "0.00"],
+    ["2026-07-08", "Q008", "expandable hose", "P010", 1, 930, 134, 47, 35, "1330.00"], ["2026-07-08", "Q008", "expandable hose", "P009", 2, 750, 68, 16, 8, "592.00"],
+    ["2026-07-09", "Q009", "cordless trimmer", "P011", 1, 810, 117, 36, 24, "5976.00"], ["2026-07-09", "Q009", "cordless trimmer", "P008", 2, 590, 22, 3, 1, "119.00"], ["2026-07-09", "Q009", "cordless trimmer", "P003", 3, 480, 8, 0, 0, "0.00"],
+    ["2026-07-10", "Q010", "white interior paint", "P014", 1, 990, 142, 52, 37, "1554.00"], ["2026-07-10", "Q010", "white interior paint", "P015", 2, 720, 43, 8, 3, "567.00"], ["2026-07-10", "Q010", "white interior paint", "P017", 3, 610, 11, 0, 0, "0.00"],
+    ["2026-07-11", "Q011", "smart thermostat", "P016", 1, 870, 104, 31, 20, "4980.00"], ["2026-07-11", "Q011", "smart thermostat", "P017", 2, 640, 15, 1, 0, "0.00"],
+    ["2026-07-12", "Q012", "led light bulbs", "P017", 1, 1180, 156, 55, 44, "924.00"], ["2026-07-12", "Q012", "led light bulbs", "P016", 2, 590, 18, 2, 0, "0.00"],
+    ["2026-07-13", "Q013", "step ladder", "P018", 1, 860, 109, 39, 29, "2581.00"], ["2026-07-13", "Q013", "step ladder", "P019", 2, 650, 36, 8, 3, "477.00"], ["2026-07-13", "Q013", "step ladder", "P011", 3, 510, 9, 0, 0, "0.00"],
+    ["2026-07-14", "Q014", "adjustable wrench", "P012", 1, 950, 123, 44, 34, "748.00"], ["2026-07-14", "Q014", "adjustable wrench", "P013", 2, 590, 12, 1, 0, "0.00"],
+]
+
+
+def main() -> None:
+    OUTPUT_PATH.parent.mkdir(exist_ok=True)
+    with OUTPUT_PATH.open("w", newline="", encoding="utf-8") as output_file:
+        writer = csv.writer(output_file, lineterminator="\n")
+        writer.writerow(HEADER)
+        writer.writerows(ROWS)
+    print(f"Wrote {len(ROWS)} ad events to {OUTPUT_PATH}")
+
+
+if __name__ == "__main__":
+    main()

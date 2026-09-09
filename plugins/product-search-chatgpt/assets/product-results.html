@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Product insights</title>
+    <style>
+      :root { color: #17231d; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+      body { margin: 0; background: #fff; }
+      .wrap { box-sizing: border-box; width: min(calc(100% - 32px), 397px); margin: 0 auto; padding: 16px; background: #fff; }
+      h2 { margin: 0 0 4px; font-size: 19px; }
+      .subtitle { margin: 0 0 16px; color: #53635b; }
+      .cards { display: grid; gap: 16px; }
+      .card { overflow: hidden; border: 1px solid #dce5df; border-radius: 14px; background: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / 5%); }
+      .product-image { width: min(100%, 348px); aspect-ratio: 314 / 251; display: block; margin: 0 auto; object-fit: cover; background: #eef3ef; }
+      .card.compact .product-image { width: min(60%, 210px); aspect-ratio: 4 / 3; }
+      .card-body { padding: 14px 16px 16px; }
+      .eyebrow { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; color: #53635b; font-size: 13px; font-weight: 650; }
+      .badge { display: inline-flex; align-items: center; min-height: 22px; padding: 0 7px; border-radius: 999px; background: #173f2d; color: #fff; font-size: 12px; }
+      h3 { margin: 0 0 8px; font-size: 18px; line-height: 1.25; }
+      .facts { display: grid; gap: 7px; margin: 0; color: #26372d; font-size: 14px; }
+      .fact { line-height: 1.45; }
+      .fact strong { color: #10251a; }
+      .explore-more { margin-top: 16px; }
+      .explore-more h3 { margin: 0 0 8px; font-size: 15px; }
+      .more-options-section { margin-top: 16px; padding: 12px; border: 1px solid #cbd8cf; border-radius: 14px; background: #f6f8f7; }
+      .more-options-section h3 { margin: 0 0 12px; color: #173f2d; font-size: 16px; }
+      .more-options-section.availability-section { border-color: #b8c9e8; background: #f3f6ff; }
+      .more-options-section.availability-section h3 { color: #244778; }
+      .more-options-section.similar-products-section { border-color: #b9d8c5; background: #f1f9f3; }
+      .more-options-section.similar-products-section h3 { color: #1f6840; }
+      .more-options-section.campaign-section { border-color: #d0c3e9; background: #f7f4ff; }
+      .more-options-section.campaign-section h3 { color: #5b3e91; }
+      .more-options-section.matching-products-section { border-color: #e8c99c; background: #fff8ed; }
+      .more-options-section.matching-products-section h3 { color: #885a16; }
+      .more-options-intro { margin: -4px 0 12px; color: #53635b; font-size: 13px; line-height: 1.4; }
+      .availability-card .product-image { width: min(60%, 210px); aspect-ratio: 4 / 3; }
+      .more-options-section .cards { gap: 12px; }
+      .action-row { display: flex; flex-wrap: wrap; gap: 8px; }
+      .action { padding: 9px 11px; border: 1px solid #173f2d; border-radius: 10px; background: #fff; color: #173f2d; font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
+      .action:disabled { cursor: default; opacity: .72; }
+      .empty { padding: 24px; text-align: center; color: #53635b; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap" id="root"><div class="empty">Loading product results…</div></div>
+    <script type="module">
+      const root = document.querySelector('#root');
+      const money = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' });
+      const number = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
+      const initializeRequestId = 'initialize-product-results';
+      let initialized = false;
+      let pendingToolResult = null;
+
+      function showStatus(message) {
+        root.replaceChildren();
+        const status = document.createElement('div');
+        status.className = 'empty';
+        status.textContent = message;
+        root.append(status);
+      }
+
+      function titleFor(data, records) {
+        if (data?.result_set === 'more_options') return 'More options';
+        if (data?.decision) return 'Ranking explanation';
+        if (Object.hasOwn(data ?? {}, 'inventory_quantity') && !data?.results) return 'Inventory check';
+        if (Object.hasOwn(data ?? {}, 'impressions') && !data?.results) return 'Campaign performance';
+        if (Object.hasOwn(data ?? {}, 'is_match') && !data?.results) return 'Relevance check';
+        if (records.some((record) => record.ranking_score != null)) return 'Ranked product results';
+        return 'Product search results';
+      }
+
+      function recordsFor(data) {
+        if (Array.isArray(data?.results)) return data.results;
+        const product = data?.product ?? data?.relevance?.product;
+        return product ? [{ ...data, product }] : [];
+      }
+
+      function addFact(facts, label, value) {
+        if (value === undefined || value === null || value === '') return;
+        const fact = document.createElement('div');
+        fact.className = 'fact';
+        const labelElement = document.createElement('strong');
+        labelElement.textContent = `${label}: `;
+        fact.append(labelElement, String(value));
+        facts.append(fact);
+      }
+
+      function percent(value) {
+        return `${number.format(Number(value ?? 0) * 100)}%`;
+      }
+
+      function cardFacts(record, product, compact = false) {
+        const facts = [
+          ['Price', product.price_usd != null ? money.format(product.price_usd) : null],
+          ['Rating', product.rating != null ? `${Number(product.rating).toFixed(1)} ★` : null],
+          ['Brand', product.brand],
+        ];
+        facts.push([
+          'Description',
+          compact ? conciseDescription(product.description) : product.description,
+        ]);
+        if (record.ranking_score != null) {
+          facts.splice(2, 0, ['Availability', record.inventory_quantity > 0 ? 'In stock' : 'Out of stock']);
+          facts.push(['Why it matched', record.matched_terms?.length ? record.matched_terms.join(', ') : `Ranking score: ${number.format(record.ranking_score)}`]);
+        } else if (record.is_similar) {
+          facts.splice(2, 0, ['Availability', record.inventory_quantity > 0 ? 'In stock' : 'Out of stock']);
+          facts.push(['Why similar', record.matched_terms?.join(', ') || 'Same product category']);
+        } else if (record.is_match !== undefined) {
+          facts.splice(2, 0, ['Match', record.is_match ? 'Matches every meaningful query term' : 'Does not match every meaningful query term']);
+          facts.push(['Retrieval score', number.format(record.retrieval_score ?? 0)]);
+          facts.push(['Matched terms', record.matched_terms?.join(', ') || 'None']);
+          facts.push(['Matched fields', record.match_fields?.join(', ') || 'None']);
+        } else if (record.in_stock !== undefined) {
+          facts.splice(2, 0, ['Availability', record.in_stock ? 'In stock' : 'Out of stock']);
+          facts.push(['Inventory quantity', record.inventory_quantity]);
+          facts.push(['Ranking eligibility', record.eligible ? 'Eligible' : 'Not eligible']);
+        } else if (record.impressions !== undefined) {
+          facts.splice(2, 0, ['Impressions', number.format(record.impressions)]);
+          facts.splice(3, 0, ['Clicks', number.format(record.clicks)]);
+          facts.push(['Click-through rate', percent(record.click_through_rate)]);
+          facts.push(['Purchases', number.format(record.purchases)]);
+          facts.push(['Purchase conversion rate', percent(record.purchase_conversion_rate)]);
+          facts.push(['Revenue', money.format(record.revenue_usd ?? 0)]);
+          facts.push(['Average order value', money.format(record.average_order_value_usd ?? 0)]);
+        } else if (record.decision) {
+          facts.splice(2, 0, ['Decision', record.decision.replaceAll('_', ' ')]);
+          facts.push(['Rank position', record.rank_position ?? 'Not ranked']);
+          facts.push(['Ranking score', record.ranking_score != null ? number.format(record.ranking_score) : 'Not available']);
+          facts.push(['Why', record.reasons?.join(' ') || 'No explanation available']);
+        } else {
+          facts.push(['Why it matched', record.matched_terms?.join(', ') || 'Catalog candidate']);
+          facts.push(['Matched fields', record.match_fields?.join(', ') || null]);
+        }
+        return facts;
+      }
+
+      function conciseDescription(description) {
+        const text = String(description ?? '').trim();
+        if (text.length <= 110) return text;
+        const sentence = text.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim();
+        if (sentence && sentence.length <= 110) return sentence;
+        return `${text.slice(0, 107).trimEnd()}…`;
+      }
+
+      function requestFollowUp(button, label, prompt) {
+        button.addEventListener('click', async () => {
+          const sendFollowUpMessage = window.openai?.sendFollowUpMessage;
+          if (typeof sendFollowUpMessage !== 'function') {
+            button.disabled = true;
+            button.textContent = `Ask: ${label}`;
+            return;
+          }
+          button.disabled = true;
+          button.textContent = 'Loading…';
+          try {
+            await sendFollowUpMessage({
+              title: label,
+              prompt,
+            });
+          } catch {
+            button.disabled = false;
+            button.textContent = label;
+          }
+        });
+      }
+
+      function followUpActions(data, records, output) {
+        const product = data?.product ?? records[0]?.product;
+        const displayedIds = records.map((record) => record.product.product_id);
+        const productId = data?.product_id ?? product?.product_id;
+        const query = data?.query;
+        const moreOptions = output?._meta?.more_options ?? output?.meta?.more_options ?? [];
+        const moreMatchingProducts = output?._meta?.more_matching_products ?? output?.meta?.more_matching_products ?? [];
+        const similarProducts = output?._meta?.similar_products ?? output?.meta?.similar_products ?? [];
+        const similarProductsIntro = output?._meta?.similar_products_intro ?? output?.meta?.similar_products_intro ?? '';
+        const availabilityDetail = output?._meta?.availability_detail ?? output?.meta?.availability_detail;
+        const campaignMetricsDetail = output?._meta?.campaign_metrics_detail ?? output?.meta?.campaign_metrics_detail;
+        const campaignMetricsIntro = output?._meta?.campaign_metrics_intro ?? output?.meta?.campaign_metrics_intro ?? '';
+        const matchingProducts = output?._meta?.matching_products ?? output?.meta?.matching_products ?? [];
+        const matchingProductsIntro = output?._meta?.matching_products_intro ?? output?.meta?.matching_products_intro ?? '';
+        if (records.some((record) => record.ranking_score != null) && moreOptions.length) {
+          return [[
+            'More Options',
+            (button) => {
+              appendProductCards(output, moreOptions, 'More Options:');
+              removeUsedAction(button);
+            },
+          ]];
+        }
+        if (Array.isArray(data?.results) && query && moreMatchingProducts.length) {
+          return [[
+            'Show more matching products',
+            (button) => {
+              appendProductCards(output, moreMatchingProducts, 'More matching products:');
+              removeUsedAction(button);
+            },
+          ]];
+        }
+        if (data?.is_match !== undefined && productId && query) {
+          return [
+            ...(availabilityDetail ? [[
+              'Check availability',
+              (button) => {
+                appendAvailabilityDetail(output, availabilityDetail);
+                removeUsedAction(button);
+              },
+            ]] : []),
+            ['Explain ranking', `Call explain_ranking with query ${JSON.stringify(query)} and product_id ${JSON.stringify(productId)}.`],
+            ['View campaign metrics', `Call get_campaign_metrics with product_id ${JSON.stringify(productId)}.`],
+          ];
+        }
+        if (data?.in_stock !== undefined && productId && product?.sub_category) {
+          return [
+            ['View campaign metrics', `Call get_campaign_metrics with product_id ${JSON.stringify(productId)}.`],
+            ...(similarProducts.length ? [[
+              'Find similar products',
+              (button) => {
+                appendProductCards(
+                  output,
+                  similarProducts,
+                  'Similar products:',
+                  similarProductsIntro,
+                  'similar-products-section',
+                );
+                removeUsedAction(button);
+              },
+            ]] : []),
+          ];
+        }
+        if (data?.impressions !== undefined && productId && product?.sub_category) {
+          return [
+            ...(availabilityDetail ? [[
+              'Check availability',
+              (button) => {
+                appendAvailabilityDetail(output, availabilityDetail);
+                removeUsedAction(button);
+              },
+            ]] : []),
+            ...(similarProducts.length ? [[
+              'Find similar products',
+              (button) => {
+                appendProductCards(
+                  output,
+                  similarProducts,
+                  'Similar products:',
+                  similarProductsIntro,
+                  'similar-products-section',
+                );
+                removeUsedAction(button);
+              },
+            ]] : []),
+          ];
+        }
+        if (data?.decision && productId && query) {
+          return [
+            ...(campaignMetricsDetail ? [[
+              'View campaign metrics',
+              (button) => {
+                appendCampaignMetrics(output, campaignMetricsDetail, campaignMetricsIntro);
+                removeUsedAction(button);
+              },
+            ]] : []),
+            ...(matchingProducts.length ? [[
+              'Show matching products',
+              (button) => {
+                appendProductCards(
+                  output,
+                  matchingProducts,
+                  'Matching products:',
+                  matchingProductsIntro,
+                  'matching-products-section',
+                );
+                removeUsedAction(button);
+              },
+            ]] : []),
+          ];
+        }
+        return [];
+      }
+
+      function addExploreMoreActions(data, records, output) {
+        const actions = followUpActions(data, records, output);
+        if (!actions.length) return;
+        const container = document.createElement('section');
+        container.className = 'explore-more';
+        const heading = document.createElement('h3');
+        heading.textContent = 'Explore more';
+        const row = document.createElement('div');
+        row.className = 'action-row';
+        actions.forEach(([label, promptOrAction]) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'action';
+          button.textContent = label;
+          if (typeof promptOrAction === 'function') {
+            button.addEventListener('click', () => promptOrAction(button));
+          } else {
+            requestFollowUp(button, label, promptOrAction);
+          }
+          row.append(button);
+        });
+        container.append(heading, row);
+        root.append(container);
+      }
+
+      function createProductCard(record, index, imageDataUrls, compact) {
+        const product = record.product;
+        const card = document.createElement('article');
+        card.className = 'card';
+        if (compact) card.classList.add('compact');
+        const image = document.createElement('img');
+        image.className = 'product-image';
+        image.src = imageDataUrls[product.product_id] ?? product.image_url;
+        image.alt = product.name;
+        const body = document.createElement('div');
+        body.className = 'card-body';
+        const eyebrow = document.createElement('div');
+        eyebrow.className = 'eyebrow';
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = record.ranking_score != null
+          ? `#${index + 1}`
+          : record.is_similar ? 'Similar product' : 'Product insight';
+        const productId = document.createElement('span');
+        productId.textContent = `Product ID: ${product.product_id}`;
+        eyebrow.append(badge, productId);
+        const name = document.createElement('h3');
+        name.textContent = product.name;
+        const facts = document.createElement('div');
+        facts.className = 'facts';
+        cardFacts(record, product, compact).forEach(([label, value]) => addFact(facts, label, value));
+        body.append(eyebrow, name, facts);
+        card.append(image, body);
+        return card;
+      }
+
+      function appendProductCards(
+        output,
+        extraRecords,
+        headingText,
+        introduction = '',
+        sectionVariant = '',
+      ) {
+        const originalCards = root.querySelector('.cards');
+        if (!originalCards || !extraRecords.length) return;
+        const metadata = output?._meta ?? output?.meta ?? {};
+        const imageDataUrls = metadata.product_image_data_urls ?? {};
+        const section = document.createElement('section');
+        section.className = `more-options-section ${sectionVariant}`.trim();
+        const heading = document.createElement('h3');
+        heading.textContent = headingText;
+        const intro = document.createElement('p');
+        intro.className = 'more-options-intro';
+        intro.textContent = introduction;
+        const cards = document.createElement('div');
+        cards.className = 'cards';
+        extraRecords.forEach((record, index) => {
+          cards.append(createProductCard(
+            record,
+            originalCards.children.length + index,
+            imageDataUrls,
+            true,
+          ));
+        });
+        section.append(heading);
+        if (introduction) section.append(intro);
+        section.append(cards);
+        appendFollowUpSection(section);
+      }
+
+      function appendAvailabilityDetail(output, availability) {
+        const originalCards = root.querySelector('.cards');
+        const product = availability?.product;
+        if (!originalCards || !product || availability.inventory_quantity == null) return;
+        const metadata = output?._meta ?? output?.meta ?? {};
+        const imageDataUrls = metadata.product_image_data_urls ?? {};
+        const section = document.createElement('section');
+        section.className = 'more-options-section availability-section';
+        const heading = document.createElement('h3');
+        heading.textContent = 'Availability:';
+        const card = document.createElement('article');
+        card.className = 'card availability-card';
+        const image = document.createElement('img');
+        image.className = 'product-image';
+        image.src = imageDataUrls[product.product_id] ?? product.image_url;
+        image.alt = product.name;
+        const body = document.createElement('div');
+        body.className = 'card-body';
+        const name = document.createElement('h3');
+        name.textContent = product.name;
+        const facts = document.createElement('div');
+        facts.className = 'facts';
+        addFact(facts, 'Price', product.price_usd != null ? money.format(product.price_usd) : null);
+        addFact(facts, 'Inventory quantity', availability.inventory_quantity);
+        body.append(name, facts);
+        card.append(image, body);
+        section.append(heading, card);
+        appendFollowUpSection(section);
+      }
+
+      function appendCampaignMetrics(output, metrics, introduction) {
+        const originalCards = root.querySelector('.cards');
+        const product = metrics?.product;
+        if (!originalCards || !product) return;
+        const metadata = output?._meta ?? output?.meta ?? {};
+        const imageDataUrls = metadata.product_image_data_urls ?? {};
+        const section = document.createElement('section');
+        section.className = 'more-options-section campaign-section';
+        const heading = document.createElement('h3');
+        heading.textContent = 'Campaign metrics:';
+        const intro = document.createElement('p');
+        intro.className = 'more-options-intro';
+        intro.textContent = introduction;
+        const card = document.createElement('article');
+        card.className = 'card availability-card';
+        const image = document.createElement('img');
+        image.className = 'product-image';
+        image.src = imageDataUrls[product.product_id] ?? product.image_url;
+        image.alt = product.name;
+        const body = document.createElement('div');
+        body.className = 'card-body';
+        const name = document.createElement('h3');
+        name.textContent = product.name;
+        const facts = document.createElement('div');
+        facts.className = 'facts';
+        addFact(facts, 'Impressions', number.format(metrics.impressions));
+        addFact(facts, 'Clicks', number.format(metrics.clicks));
+        addFact(facts, 'Click-through rate', percent(metrics.click_through_rate));
+        addFact(facts, 'Purchases', number.format(metrics.purchases));
+        addFact(facts, 'Purchase conversion rate', percent(metrics.purchase_conversion_rate));
+        addFact(facts, 'Revenue', money.format(metrics.revenue_usd ?? 0));
+        body.append(name, facts);
+        card.append(image, body);
+        section.append(heading);
+        if (introduction) section.append(intro);
+        section.append(card);
+        appendFollowUpSection(section);
+      }
+
+      function appendFollowUpSection(section) {
+        const actions = root.querySelector('.explore-more');
+        if (actions) {
+          actions.before(section);
+        } else {
+          root.append(section);
+        }
+      }
+
+      function removeUsedAction(button) {
+        const row = button.parentElement;
+        button.remove();
+        if (!row?.children.length) row.closest('.explore-more')?.remove();
+      }
+
+      function render(output) {
+        const data = output?.structuredContent ?? output?.structured_content ?? output;
+        const metadata = output?._meta ?? output?.meta ?? {};
+        const imageDataUrls = metadata.product_image_data_urls ?? {};
+        const records = recordsFor(data);
+        root.replaceChildren();
+        const title = document.createElement('h2');
+        title.textContent = titleFor(data, records);
+        const subtitle = document.createElement('p');
+        subtitle.className = 'subtitle';
+        subtitle.textContent = data?.query ? `Query: ${data.query}` : '';
+        root.append(title, subtitle);
+        if (!records.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = 'No matching products.';
+          root.append(empty);
+          return;
+        }
+        const cards = document.createElement('section');
+        cards.className = 'cards';
+        const compact = data?.result_set === 'more_options';
+        records.forEach((record, index) => cards.append(
+          createProductCard(record, index, imageDataUrls, compact),
+        ));
+        root.append(cards);
+        addExploreMoreActions(data, records, output);
+      }
+
+      function renderWhenReady(output) {
+        if (!initialized) {
+          pendingToolResult = output;
+          return;
+        }
+        render(output);
+      }
+
+      window.addEventListener('message', (event) => {
+        if (event.source !== window.parent) return;
+        const message = event.data;
+        if (!message || message.jsonrpc !== '2.0') return;
+        if (message.id === initializeRequestId) {
+          if (message.error) {
+            showStatus('Unable to connect to product results. Start a new chat and try again.');
+            return;
+          }
+          initialized = true;
+          window.parent.postMessage({ jsonrpc: '2.0', method: 'ui/notifications/initialized', params: {} }, '*');
+          if (pendingToolResult) {
+            render(pendingToolResult);
+            pendingToolResult = null;
+          }
+          return;
+        }
+        if (message.method === 'ui/notifications/tool-result') renderWhenReady(message.params);
+      }, { passive: true });
+
+      if (window.openai?.toolOutput) renderWhenReady(window.openai.toolOutput);
+      window.parent.postMessage({
+        jsonrpc: '2.0', id: initializeRequestId, method: 'ui/initialize',
+        params: { protocolVersion: '2026-01-26', appInfo: { name: 'Product Search Results', version: '1.2.0' }, appCapabilities: {} },
+      }, '*');
+    </script>
+  </body>
+</html>

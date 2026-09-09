@@ -1,0 +1,4 @@
+[console_scripts]
+product-ranking-agent = ranking_agent.mcp_server:main
+product-search = ranking_agent.mcp_server:main
+product-search-install-skill = ranking_agent.install_skill:main

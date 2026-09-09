@@ -1,0 +1,20 @@
+{
+  "name": "product-search-chatgpt",
+  "version": "0.1.0",
+  "description": "Render product rankings with inline images in ChatGPT.",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Product Search Chatgpt",
+    "shortDescription": "Visual product ranking for ChatGPT.",
+    "longDescription": "Connects the product ranking MCP server to a ChatGPT-rendered comparison table with inline images.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": ["Interactive"],
+    "defaultPrompt": "Show the top three cordless power drills in a visual comparison table with images."
+  },
+  "mcpServers": "./.mcp.json",
+  "apps": "./.app.json"
+}

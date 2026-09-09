@@ -1,0 +1,4 @@
+interface:
+  display_name: "Product Search Results"
+  short_description: "Visual image-first catalog product insights"
+  default_prompt: "Use $product-search-results to find products and show image-first product insights."
