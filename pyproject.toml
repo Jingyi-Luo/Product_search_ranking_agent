@@ -1,8 +1,10 @@
 [project]
 name = "product-ranking-agent"
-version = "0.1.26"
+version = "0.1.27"
 description = "Synthetic product search relevance and ranking agent"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = [
     "fastmcp>=2.0,<4",
@@ -14,7 +16,7 @@ product-search = "ranking_agent.mcp_server:main"
 product-search-install-skill = "ranking_agent.install_skill:main"
 
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]

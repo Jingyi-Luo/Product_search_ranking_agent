@@ -1,10 +1,13 @@
 Metadata-Version: 2.4
 Name: product-ranking-agent
-Version: 0.1.26
+Version: 0.1.27
 Summary: Synthetic product search relevance and ranking agent
+License-Expression: MIT
 Requires-Python: >=3.11
 Description-Content-Type: text/markdown
+License-File: LICENSE
 Requires-Dist: fastmcp<4,>=2.0
+Dynamic: license-file
 
 ![Product Search & Ranking Agent](docs/images/readme_head.png)
 
@@ -64,3 +67,7 @@ Connect your MCP client to `http://127.0.0.1:8000/mcp`, then begin a new chat so
 ## Documentation
 
 For setup, client configuration, tool details, deployment, packaging, and development, see the [getting-started guide](docs/getting-started.md) and the rest of the [docs](docs/) folder.
+
+## License and citation
+
+This project is licensed under the [MIT License](LICENSE). If you use this work in research or other published work, see [CITATION.cff](CITATION.cff) for the preferred citation.

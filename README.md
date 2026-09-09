@@ -56,3 +56,7 @@ Connect your MCP client to `http://127.0.0.1:8000/mcp`, then begin a new chat so
 ## Documentation
 
 For setup, client configuration, tool details, deployment, packaging, and development, see the [getting-started guide](docs/getting-started.md) and the rest of the [docs](docs/) folder.
+
+## License and citation
+
+This project is licensed under the [MIT License](LICENSE). If you use this work in research or other published work, see [CITATION.cff](CITATION.cff) for the preferred citation.
