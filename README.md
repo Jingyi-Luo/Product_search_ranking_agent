@@ -47,6 +47,22 @@ product-ranking-agent
 
 Connect your MCP client to `http://127.0.0.1:8000/mcp`, then begin a new chat so it loads the current tools.
 
+## Install the Codex skill
+
+Install the bundled Product Search Results skill into the current project:
+
+```bash
+product-search-install-skill
+```
+
+To install it into a different project, provide that project's path:
+
+```bash
+product-search-install-skill --project /path/to/project
+```
+
+If that project already has this skill and you want to replace it, add `--force`.
+
 ## Application example
 
 ![Application example 1.0](docs/images/application_example_1_0.png)
