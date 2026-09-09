@@ -1,4 +1,4 @@
-# Product Search & Ranking Agent
+![Product Search & Ranking Agent](docs/images/readme_head.png)
 
 **Agent name:** Product Search & Ranking Agent (`product-ranking-agent`)
 
