@@ -1,6 +1,6 @@
 [project]
 name = "product-ranking-agent"
-version = "0.1.28"
+version = "0.1.29"
 description = "Synthetic product search relevance and ranking agent"
 readme = "README.md"
 license = "MIT"

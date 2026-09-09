@@ -42,4 +42,5 @@ src/ranking_agent/install_skill.py
 src/ranking_agent/mcp_server.py
 src/ranking_agent/runtime_paths.py
 tests/test_catalog.py
+tests/test_install_skill.py
 tests/test_more_product_suggestions.py

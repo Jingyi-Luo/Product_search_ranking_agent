@@ -55,6 +55,8 @@ Install the bundled Product Search Results skill into the current project:
 product-search-install-skill
 ```
 
+The command copies the skill to `.codex/skills/product-search-results` in that project.
+
 To install it into a different project, provide that project's path:
 
 ```bash
