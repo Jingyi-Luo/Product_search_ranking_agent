@@ -9,7 +9,7 @@ from pathlib import Path
 
 PACKAGE_PATH = Path(__file__).resolve().parent
 SOURCE_ROOT = PACKAGE_PATH.parents[1]
-INSTALL_ROOT_NAME = "product-ranking-agent"
+INSTALL_ROOT_NAME = "ranking-agent"
 
 
 def resource_root() -> Path:
@@ -26,7 +26,7 @@ def resource_root() -> Path:
     raise RuntimeError(
         "Bundled Product Search assets are missing. "
         "Reinstall the package with `pip install --force-reinstall "
-        "product-ranking-agent`."
+        "ranking-agent`."
     )
 
 

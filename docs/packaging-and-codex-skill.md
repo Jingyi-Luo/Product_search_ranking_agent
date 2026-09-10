@@ -1,13 +1,13 @@
 # Packaging and Codex skill
 
-The Python distribution is named `product-ranking-agent`. Its wheel bundles the MCP server, catalog data, images, Product Insight UI, and `product-search-results` Codex skill.
+The Python distribution is named `ranking-agent`. Its wheel bundles the MCP server, catalog data, images, Product Insight UI, and `product-search-results` Codex skill.
 
 ## Install a wheel
 
 The current wheel is in [dist](../dist/):
 
 ```bash
-python3 -m pip install --upgrade ../dist/product_ranking_agent-0.1.23-py3-none-any.whl
+python3 -m pip install --upgrade ../dist/ranking_agent-0.1.30-py3-none-any.whl
 ```
 
 Run this command from the `docs/` directory. From the repository root, omit `../`.
@@ -18,13 +18,13 @@ Run this command from the `docs/` directory. From the repository root, omit `../
 2. They download it and run this command from the folder containing the file:
 
    ```bash
-   python3 -m pip install product_ranking_agent-0.1.23-py3-none-any.whl
+   python3 -m pip install ranking_agent-0.1.30-py3-none-any.whl
    ```
 
 3. They start the server with:
 
    ```bash
-   product-search
+   ranking-agent
    ```
 
 ## Build a new wheel

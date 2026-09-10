@@ -1,6 +1,6 @@
 [project]
-name = "product-ranking-agent"
-version = "0.1.29"
+name = "ranking-agent"
+version = "0.1.30"
 description = "Synthetic product search relevance and ranking agent"
 readme = "README.md"
 license = "MIT"
@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.scripts]
-product-ranking-agent = "ranking_agent.mcp_server:main"
+ranking-agent = "ranking_agent.mcp_server:main"
 product-search = "ranking_agent.mcp_server:main"
 product-search-install-skill = "ranking_agent.install_skill:main"
 

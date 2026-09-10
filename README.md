@@ -1,6 +1,6 @@
 ![Product Search & Ranking Agent](docs/images/readme_head.png)
 
-**Agent name:** Product Search & Ranking Agent (`product-ranking-agent`)
+**Agent name:** Product Search & Ranking Agent (`ranking-agent`)
 
 An MCP server that searches a synthetic product catalog and returns transparent, image-first product recommendations.
 
@@ -34,7 +34,7 @@ mamba activate product-ranking
 2. Install the published package from PyPI into the activated environment:
 
 ```bash
-python3 -m pip install product-ranking-agent
+python3 -m pip install ranking-agent
 ```
 
 ## Quick start
@@ -42,7 +42,7 @@ python3 -m pip install product-ranking-agent
 Start the server:
 
 ```bash
-product-ranking-agent
+ranking-agent
 ```
 
 Connect your MCP client to `http://127.0.0.1:8000/mcp`, then begin a new chat so it loads the current tools.

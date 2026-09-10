@@ -19,7 +19,7 @@ data_files: list[tuple[str, list[str]]] = []
 for relative_directory in ASSET_DIRECTORIES:
     directory = ROOT / relative_directory
     for asset_path in sorted(path for path in directory.rglob("*") if path.is_file()):
-        destination = Path("product-ranking-agent") / asset_path.parent.relative_to(ROOT)
+        destination = Path("ranking-agent") / asset_path.parent.relative_to(ROOT)
         data_files.append((str(destination), [str(asset_path.relative_to(ROOT))]))
 
 
